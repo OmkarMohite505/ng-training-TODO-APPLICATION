@@ -1,19 +1,12 @@
- 
-const mysql = require('mysql');
+const mysql = require('mysql2');
 
+// Create a MySQL connection pool
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root', // Replace with your MySQL username
-    password: 'root', // Replace with your MySQL password
-    database: 'todo_app'
-});
-
-db.connect((err) => {
-    if (err) {
-        console.error('Error connecting to the database:', err);
-        return;
-    }
-    console.log('Connected to the MySQL database.');
+    connectionLimit: 10, // Limit the number of simultaneous connections
+    host: 'localhost',   // Replace with your DB host
+    user: 'root',        // Replace with your DB user
+    password: 'root', // Replace with your DB password
+    database: 'taskdb'   // Replace with your DB name
 });
 
 module.exports = db;

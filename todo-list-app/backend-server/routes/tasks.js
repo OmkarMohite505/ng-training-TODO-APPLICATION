@@ -1,41 +1,54 @@
 const express = require('express');
 const router = express.Router();
+const db = require('../db'); // Import the db.js file
 
-let tasks = []; // In-memory array to hold tasks
-let nextId = 1; // ID counter for tasks
-
-// GET all tasks
-router.get('/', (req, res) => {
-  res.json(tasks);
+// Get all tasks
+router.get('/tasks', (req, res) => {
+    const query = 'SELECT * FROM tasks';
+    
+    db.query(query, [], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: 'Database query failed' });
+        }
+        res.json(results);
+    });
 });
 
-// POST a new task
-router.post('/', (req, res) => {
-  const newTask = { id: nextId++, ...req.body };
-  tasks.push(newTask);
-  res.status(201).json(newTask);
+// Get a task by ID
+router.get('/tasks/:id', (req, res) => {
+    const query = 'SELECT * FROM tasks WHERE id = ?';
+    
+    db.query(query, [req.params.id], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: 'Database query failed' });
+        }
+        res.json(results[0]);
+    });
 });
 
-// PUT (edit) a task
-router.put('/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  const index = tasks.findIndex(task => task.id === id);
-  if (index === -1) {
-    return res.status(404).json({ message: 'Task not found' });
-  }
-  tasks[index] = { ...tasks[index], ...req.body }; // Update task
-  res.json(tasks[index]);
+// Create a new task
+router.post('/tasks', (req, res) => {
+    const { title, description } = req.body;
+    const query = 'INSERT INTO tasks (title, description) VALUES (?, ?)';
+    
+    db.query(query, [title, description], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: 'Database query failed' });
+        }
+        res.json({ id: result.insertId, title, description });
+    });
 });
 
-// DELETE a task
-router.delete('/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  const index = tasks.findIndex(task => task.id === id);
-  if (index === -1) {
-    return res.status(404).json({ message: 'Task not found' });
-  }
-  tasks.splice(index, 1); // Remove task
-  res.status(204).send(); // No content
+// Delete a task
+router.delete('/tasks/:id', (req, res) => {
+    const query = 'DELETE FROM tasks WHERE id = ?';
+    
+    db.query(query, [req.params.id], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: 'Database query failed' });
+        }
+        res.json({ message: 'Task deleted successfully' });
+    });
 });
 
 module.exports = router;
